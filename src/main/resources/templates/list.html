@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome to my world</title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script type="text/javascript">
+        //ok ajax
+        function createCustomer() {
+            let firstname = $('#firstName').val();
+            let lastName = $('#lastName').val();
+            let province = $('#province').val();
+            let customer = {
+                firstName: firstname,
+                lastName: lastName,
+                province: {id: province}
+            }
+            $.ajax({
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                type: "POST",
+                url: "/customers/create",
+                data: JSON.stringify(customer),
+                success: successHandler,
+            })
+        }
+
+        function successHandler() {
+            $.ajax({
+                type: "GET",
+                url: "/customers/showAll",
+                success: function (data) {
+                    let content = '    <tr>\n' +
+                        '        <td>firstName</td>\n' +
+                        '        <td>lastName</td>\n' +
+                        '        <td>Province</td>\n' +
+                        '        <td>Edit</td>\n' +
+                        '        <td>Delete</td>\n' +
+                        '    </tr>';
+                    for (let i = 0; i < data.length; i++) {
+                        content += getCustomer(data[i])
+                    }
+                    document.getElementById('customerList').innerHTML = content;
+                }
+            })
+        }
+
+        function getCustomer(customer) {
+            return `<tr><td >${customer.firstName}</td>
+                        <td >${customer.lastName}</td>
+                        <td >${customer.province.provinceName}</td>` +
+                `<td><button type="submit" value="${customer.id}" onclick="updateCustomer(this)">Edit</button></td>` +
+                `<td><button type="submit" value="${customer.id}" onclick="deleteCustomer(this)">Delete</button></td>`
+        };
+
+        function deleteCustomer(a) {
+            let id = a.getAttribute("value");
+            $.ajax({
+                type: "DELETE",
+                url: "/customers/delete/" + id,
+                success: successHandler
+            })
+        }
+        successHandler();
+    </script>
+</head>
+<body>
+<table id="customerList">
+    <tr>
+        <td> First Name:</td>
+        <td> Last Name:</td>
+        <td> Province:</td>
+        <td> Edit</td>
+        <td> Delete</td>
+    </tr>
+    <tr th:each="beng:${customers}">
+        <td th:text="${beng.getFirstName()}"></td>
+        <td th:text="${beng.getLastName()}"></td>
+        <td th:if="${beng.getProvince()}" th:text="${beng.getProvince().getProvinceName()}"></td>
+        <td th:unless="${beng.province}"></td>
+        <td>
+            <button type="submit" th:value="${beng.id}" onclick="updateCustomer(this)">Edit</button>
+        </td>
+        <td>
+            <button type="submit" th:value="${beng.id}" onclick="deleteCustomer(this)">Delete</button>
+        </td>
+    </tr>
+</table>
+<table id="addPeople">
+    <tr>
+        <td>First Name :</td>
+        <td><input type="text" id="firstName" placeholder="Tell me your First Name"></td>
+    </tr>
+    <tr>
+        <td>Last Name :</td>
+        <td><input type="text" id="lastName" placeholder="Tell me your Last Name"></td>
+    </tr>
+    <tr>
+        <td>Province :</td>
+        <td>
+            <select id="province">
+                <option th:each="beng:${provinceList}" th:value="${beng.id}" th:text="${beng.provinceName}">
+
+                </option>
+            </select>
+
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <button TYPE="submit" onclick="createCustomer()">CREate</button>
+        </td>
+    </tr>
+</table>
+</body>
+</html>
